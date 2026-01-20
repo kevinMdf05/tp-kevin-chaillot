@@ -1,49 +1,33 @@
 # TP Docker, Docker Compose & Kubernetes – Microservices
 
-## Auteur : Kevin CHAILLOT
+## Kevin CHAILLOT
 
 ---
 
-## 📋 Sommaire
+## Sommaire
 
 1. [Présentation du projet](#présentation-du-projet)
 2. [TP1 – Service Java (RentalService)](#tp1--service-java-rentalservice)
-   - [Prérequis](#prérequis)
-   - [Exécution sans Docker](#exécution-sans-docker)
-   - [Exécution avec Docker](#exécution-avec-docker)
-   - [Publication sur Docker Hub](#publication-sur-docker-hub)
 3. [TP2 – Service PHP (microservice-php-kevin)](#tp2--service-php-microservice-php-kevin)
-   - [Création du service](#création-du-service)
-   - [Dockerfile PHP](#dockerfile-php)
-   - [Build et exécution](#build-et-exécution)
-   - [Publication sur Docker Hub](#publication-sur-docker-hub-1)
 4. [TP2 bis – Docker Compose](#tp2-bis--docker-compose)
-   - [Architecture](#architecture)
-   - [Fichier docker-compose.yml](#fichier-docker-composeyml)
-   - [Lancement des services](#lancement-des-services)
-   - [URLs de test](#urls-de-test)
 5. [TP3 – Kubernetes avec Minikube](#tp3--kubernetes-avec-minikube)
-   - [Structure des fichiers K8s](#structure-des-fichiers-k8s)
-   - [Déploiement](#déploiement)
-   - [Accès aux services](#accès-aux-services)
 6. [Liens Docker Hub](#liens-docker-hub)
-7. [Captures d'écran](#captures-décran)
 
 ---
 
 ## Présentation du projet
 
-Ce projet met en œuvre une architecture **microservices** composée de deux services communiquant via HTTP :
+Ce projet implémente une architecture microservices avec deux services qui communiquent via HTTP :
 
-| Service | Technologie | Port | Description |
-|---------|-------------|------|-------------|
-| **RentalService** | Java 21 / Spring Boot 3.2.1 | 8080 | Service principal qui appelle le service PHP |
-| **microservice-php-kevin** | PHP 8.2 / Apache | 80 | Service secondaire retournant le prénom "Kevin" |
+| Service | Technologie | Port | Rôle |
+|---------|-------------|------|------|
+| **RentalService** | Java 21 / Spring Boot 3.2.1 | 8080 | Service principal appelant le service PHP |
+| **microservice-php-kevin** | PHP 8.2 / Apache | 80 | Retourne le prénom "Kevin" |
 
-Le projet couvre trois niveaux de déploiement :
-- **Docker** : Conteneurisation individuelle des services
-- **Docker Compose** : Orchestration locale des microservices
-- **Kubernetes** : Déploiement sur cluster Minikube
+L'objectif est de déployer ces services de trois manières différentes :
+- **Docker** : conteneurisation individuelle
+- **Docker Compose** : orchestration locale
+- **Kubernetes** : déploiement sur cluster Minikube
 
 ---
 
@@ -51,51 +35,44 @@ Le projet couvre trois niveaux de déploiement :
 
 ### Prérequis
 
-- **Java JDK 21** installé sur la machine
-- Vérification de la version :
+Java JDK 21 doit être installé. Vérification :
 
 ```powershell
 java -version
 ```
 
-> Si Java 21 n'est pas installé :
-> ```powershell
-> winget install EclipseAdoptium.Temurin.21.JDK
-> ```
+Installation si nécessaire :
+```powershell
+winget install EclipseAdoptium.Temurin.21.JDK
+```
 
 ### Exécution sans Docker
 
-#### 1. Se positionner dans le dossier du service Java
+Se placer dans le dossier du service Java :
 
 ```powershell
 cd C:\Users\kevmo\Desktop\tp-kevin-chaillot\RentalService
 ```
 
-#### 2. Compiler le projet avec Gradle
+Compiler le projet :
 
 ```powershell
 ./gradlew build
 ```
 
-#### 3. Lancer l'application
+Lancer l'application :
 
 ```powershell
 java -jar build/libs/RentalService-0.0.1-SNAPSHOT.jar
 ```
 
-#### 4. Tester dans le navigateur
+Test dans le navigateur : http://localhost:8080/bonjour
 
-```
-http://localhost:8080/bonjour
-```
-
-> ⚠️ Pour arrêter le serveur : `Ctrl + C`
+Pour arrêter : `Ctrl + C`
 
 ### Exécution avec Docker
 
-#### 1. Contenu du Dockerfile
-
-Créer un fichier `Dockerfile` dans le dossier `RentalService` :
+Contenu du fichier `Dockerfile` dans le dossier `RentalService` :
 
 ```dockerfile
 FROM eclipse-temurin:21
@@ -105,44 +82,26 @@ ADD ./build/libs/RentalService-0.0.1-SNAPSHOT.jar app.jar
 ENTRYPOINT ["java","-Djava.security.egd=file:/dev/./urandom","-jar","/app.jar"]
 ```
 
-#### 2. Construire l'image Docker
+Construction de l'image :
 
 ```powershell
 cd C:\Users\kevmo\Desktop\tp-kevin-chaillot\RentalService
 docker build -t rentalservice .
 ```
 
-#### 3. Lancer le conteneur
-
-> ⚠️ S'assurer que le serveur Java local est arrêté avant de lancer Docker.
+Lancement du conteneur (arrêter le serveur Java local avant) :
 
 ```powershell
 docker run -p 8080:8080 rentalservice
 ```
 
-#### 4. Tester dans le navigateur
-
-```
-http://localhost:8080/bonjour
-```
+Test dans le navigateur : http://localhost:8080/bonjour
 
 ### Publication sur Docker Hub
 
-#### 1. Se connecter à Docker Hub
-
 ```powershell
 docker login
-```
-
-#### 2. Taguer l'image
-
-```powershell
 docker tag rentalservice kevmdf/rentalservice:latest
-```
-
-#### 3. Pousser l'image
-
-```powershell
 docker push kevmdf/rentalservice:latest
 ```
 
@@ -152,7 +111,7 @@ docker push kevmdf/rentalservice:latest
 
 ### Création du service
 
-#### 1. Créer le dossier du service PHP
+Création du dossier :
 
 ```powershell
 cd C:\Users\kevmo\Desktop\tp-kevin-chaillot
@@ -160,9 +119,7 @@ mkdir microservice-php-kevin
 cd microservice-php-kevin
 ```
 
-#### 2. Créer le fichier index.php
-
-Créer un fichier `index.php` avec le contenu suivant :
+Contenu du fichier `index.php` :
 
 ```php
 <?php
@@ -170,11 +127,9 @@ header("Content-Type: text/plain");
 echo "Kevin";
 ```
 
-Ce service retourne simplement le prénom "Kevin" en texte brut.
+### Dockerfile
 
-### Dockerfile PHP
-
-Créer un fichier `Dockerfile` dans le dossier `microservice-php-kevin` :
+Contenu du fichier `Dockerfile` dans `microservice-php-kevin` :
 
 ```dockerfile
 FROM php:8.2-apache
@@ -186,29 +141,22 @@ EXPOSE 80
 
 ### Build et exécution
 
-#### 1. Construire l'image Docker
+Construction de l'image :
 
 ```powershell
 cd C:\Users\kevmo\Desktop\tp-kevin-chaillot\microservice-php-kevin
 docker build -t microservice-php-kevin .
 ```
 
-#### 2. Lancer le conteneur
+Lancement du conteneur :
 
 ```powershell
 docker run -p 8081:80 microservice-php-kevin
 ```
 
-#### 3. Tester dans le navigateur
+Test dans le navigateur : http://localhost:8081
 
-```
-http://localhost:8081
-```
-
-**Résultat attendu :**
-```
-Kevin
-```
+Résultat : `Kevin`
 
 ### Publication sur Docker Hub
 
@@ -224,7 +172,7 @@ docker push kevmdf/microservice-php-kevin:latest
 
 ### Architecture
 
-L'orchestration Docker Compose permet aux deux microservices de communiquer via un réseau Docker interne.
+Les deux microservices communiquent via un réseau Docker interne :
 
 ```
 ┌─────────────────────────────────────────────────────────┐
@@ -240,11 +188,11 @@ L'orchestration Docker Compose permet aux deux microservices de communiquer via 
 └─────────────────────────────────────────────────────────┘
 ```
 
-**Communication** : Le service Java appelle le service PHP via le nom DNS Docker `http://microservicephp`.
+Le service Java appelle le service PHP via le DNS Docker `http://microservicephp`.
 
 ### Fichier docker-compose.yml
 
-Créer un fichier `docker-compose.yml` à la racine du projet :
+Contenu du fichier `docker-compose.yml` à la racine du projet :
 
 ```yaml
 version: "3.8"
@@ -277,7 +225,7 @@ networks:
 
 ### Configuration Spring Boot
 
-Le fichier `application.properties` du service Java contient :
+Fichier `application.properties` du service Java :
 
 ```properties
 server.port=8080
@@ -285,11 +233,11 @@ spring.application.name=RentalService
 customer.service.url=http://php-service
 ```
 
-> Note : L'URL du service PHP est surchargée par la variable d'environnement dans Docker Compose.
+L'URL est surchargée par la variable d'environnement dans Docker Compose.
 
-### Lancement des services
+### Lancement
 
-#### 1. Compiler le service Java (si modifications)
+Compilation du service Java si nécessaire :
 
 ```powershell
 cd C:\Users\kevmo\Desktop\tp-kevin-chaillot\RentalService
@@ -297,38 +245,35 @@ cd C:\Users\kevmo\Desktop\tp-kevin-chaillot\RentalService
 cd ..
 ```
 
-#### 2. Démarrer les conteneurs
+Démarrage des conteneurs :
 
 ```powershell
 cd C:\Users\kevmo\Desktop\tp-kevin-chaillot
 docker-compose up
 ```
 
-Ou en mode détaché (arrière-plan) :
+Mode détaché :
 
 ```powershell
 docker-compose up -d
 ```
 
-#### 3. Reconstruire les images si nécessaire
+Reconstruction des images :
 
 ```powershell
 docker-compose up --build
 ```
 
-### URLs de test
+### Tests
 
-| URL | Résultat attendu |
-|-----|------------------|
-| `http://localhost:8080/customer/Jean%20Dupont` | `Kevin Jean Dupont` |
-| `http://localhost:80` | `Kevin` |
+| URL | Résultat |
+|-----|----------|
+| http://localhost:8080/customer/Jean%20Dupont | `Kevin Jean Dupont` |
+| http://localhost:80 | `Kevin` |
 
-**Explication du flux :**
-1. L'utilisateur appelle `/customer/Jean Dupont` sur le service Java
-2. Le service Java appelle `http://microservicephp` et récupère "Kevin"
-3. Le service Java concatène la réponse avec le paramètre et retourne "Kevin Jean Dupont"
+Le service Java récupère "Kevin" depuis le service PHP et le concatène avec le paramètre passé en URL.
 
-### Arrêt des conteneurs
+### Arrêt
 
 ```powershell
 docker-compose down
@@ -344,21 +289,21 @@ docker-compose down -v
 
 ## TP3 – Kubernetes avec Minikube
 
-### Structure des fichiers K8s
+### Structure des fichiers
 
 ```
 k8s/
 ├── java/
-│   ├── java-deployment.yaml    # Deployment du service Java
-│   └── java-service.yaml       # Service NodePort pour accès externe
+│   ├── java-deployment.yaml
+│   └── java-service.yaml
 └── php/
-    ├── php-deployment.yaml     # Deployment du service PHP
-    └── php-service.yaml        # Service ClusterIP pour accès interne
+    ├── php-deployment.yaml
+    └── php-service.yaml
 ```
 
 ### Fichiers de déploiement
 
-#### java-deployment.yaml
+**java-deployment.yaml** :
 
 ```yaml
 apiVersion: apps/v1
@@ -385,7 +330,7 @@ spec:
               value: http://php-service:80
 ```
 
-#### java-service.yaml
+**java-service.yaml** :
 
 ```yaml
 apiVersion: v1
@@ -401,7 +346,7 @@ spec:
   type: NodePort
 ```
 
-#### php-deployment.yaml
+**php-deployment.yaml** :
 
 ```yaml
 apiVersion: apps/v1
@@ -425,7 +370,7 @@ spec:
             - containerPort: 80
 ```
 
-#### php-service.yaml
+**php-service.yaml** :
 
 ```yaml
 apiVersion: v1
@@ -443,13 +388,13 @@ spec:
 
 ### Déploiement
 
-#### 1. Démarrer Minikube
+Démarrage de Minikube :
 
 ```powershell
 minikube start
 ```
 
-#### 2. Appliquer les configurations Kubernetes
+Application des configurations :
 
 ```powershell
 cd C:\Users\kevmo\Desktop\tp-kevin-chaillot\k8s
@@ -457,26 +402,15 @@ kubectl apply -f java/
 kubectl apply -f php/
 ```
 
-Ou tout en une commande :
+Vérification :
 
 ```powershell
-kubectl apply -f .
-```
-
-#### 3. Vérifier le déploiement
-
-```powershell
-# Voir les pods
 kubectl get pods
-
-# Voir les services
 kubectl get svc
-
-# Voir les déploiements
 kubectl get deployments
 ```
 
-**Résultat attendu :**
+Résultat attendu pour `kubectl get svc` :
 
 ```
 NAME            TYPE        CLUSTER-IP      EXTERNAL-IP   PORT(S)          AGE
@@ -487,59 +421,38 @@ rentalservice   NodePort    10.96.xxx.xxx   <none>        8080:3xxxx/TCP   1m
 
 ### Mise à jour des images
 
-Si vous modifiez le code et souhaitez redéployer :
-
 ```powershell
-# Reconstruire l'image Java
 cd C:\Users\kevmo\Desktop\tp-kevin-chaillot\RentalService
 docker build -t rentalservice:latest .
-
-# Charger l'image dans Minikube
 minikube image load rentalservice:latest
-
-# Redémarrer le déploiement
 kubectl rollout restart deployment rentalservice
 ```
 
-### Accès aux services
+### Accès au service
 
-#### Option 1 : Commande minikube service
+Via minikube :
 
 ```powershell
 minikube service rentalservice
 ```
 
-Cette commande ouvre automatiquement le navigateur avec l'URL correcte.
-
-#### Option 2 : Port-forward manuel
+Via port-forward :
 
 ```powershell
 kubectl port-forward service/rentalservice 8080:8080
 ```
 
-Puis accéder via : `http://localhost:8080/customer/Kevin`
+Test : http://127.0.0.1:<NodePort>/customer/Kevin
 
-### Test final
+Résultat : `Kevin Kevin`
 
-**URL de test :**
-```
-http://127.0.0.1:<NodePort>/customer/Kevin
-```
-
-**Résultat attendu :**
-```
-Kevin Kevin
-```
-
-> Le NodePort est attribué dynamiquement. Utilisez `kubectl get svc` pour le récupérer.
-
-### Arrêt du cluster
+### Arrêt
 
 ```powershell
 minikube stop
 ```
 
-Ou pour supprimer complètement :
+Suppression complète :
 
 ```powershell
 minikube delete
@@ -549,58 +462,19 @@ minikube delete
 
 ## Liens Docker Hub
 
-| Service | Image Docker Hub |
-|---------|------------------|
+| Service | Image |
+|---------|-------|
 | RentalService | [kevmdf/rentalservice](https://hub.docker.com/r/kevmdf/rentalservice) |
 | Microservice PHP | [kevmdf/microservice-php-kevin](https://hub.docker.com/r/kevmdf/microservice-php-kevin) |
 
 ---
 
-## Captures d'écran
-
-> 📸 **À compléter** : Insérer les captures d'écran pour illustrer chaque étape.
-
-### Captures recommandées :
-
-#### TP1 – Service Java
-- [ ] Résultat de `java -version`
-- [ ] Build Gradle réussi (`./gradlew build`)
-- [ ] Application Java lancée sans Docker
-- [ ] Test navigateur `http://localhost:8080/bonjour`
-- [ ] Build Docker réussi
-- [ ] Application lancée avec Docker
-- [ ] Push sur Docker Hub réussi
-
-#### TP2 – Service PHP
-- [ ] Contenu du fichier `index.php`
-- [ ] Build Docker du service PHP
-- [ ] Test navigateur `http://localhost:8081`
-- [ ] Push sur Docker Hub réussi
-
-#### TP2 bis – Docker Compose
-- [ ] Fichier `docker-compose.yml`
-- [ ] Lancement avec `docker-compose up`
-- [ ] Test `http://localhost:8080/customer/Jean%20Dupont` → "Kevin Jean Dupont"
-- [ ] Test `http://localhost:80` → "Kevin"
-
-#### TP3 – Kubernetes
-- [ ] Résultat de `kubectl get pods`
-- [ ] Résultat de `kubectl get svc`
-- [ ] Accès via `minikube service rentalservice`
-- [ ] Test navigateur avec le NodePort
-
----
-
 ## Conclusion
 
-Ce projet démontre la mise en place complète d'une architecture microservices :
+Ce projet met en place une architecture microservices complète :
 
-1. **Conteneurisation** : Chaque service possède son propre Dockerfile et son image Docker Hub
-2. **Orchestration locale** : Docker Compose permet de lancer et faire communiquer les services
-3. **Déploiement cloud-ready** : Kubernetes assure un déploiement scalable avec gestion DNS interne
+1. **Conteneurisation** : chaque service a son Dockerfile et son image sur Docker Hub
+2. **Orchestration** : Docker Compose gère la communication entre les services via un réseau bridge
+3. **Déploiement Kubernetes** : les services sont déployés sur Minikube avec gestion DNS interne (ClusterIP pour le PHP, NodePort pour le Java)
 
-Les services communiquent via HTTP grâce au DNS interne de Docker (Compose) ou Kubernetes, permettant une architecture découplée et facilement maintenable.
-
----
-
-*Projet réalisé dans le cadre des TPs Docker, Docker Compose et Kubernetes.*
+Les deux services communiquent via HTTP grâce au DNS interne de Docker ou Kubernetes.
